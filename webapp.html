@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snake Game</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #282c34;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+        canvas {
+            border: 1px solid #ffffff;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="400" height="400"></canvas>
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        const boxSize = 20;
+        const rows = canvas.height / boxSize;
+        const columns = canvas.width / boxSize;
+
+        let snake = [{ x: 5, y: 5 }];
+        let direction = "RIGHT";
+        let food = spawnFood();
+        let gameOver = false;
+
+        document.addEventListener("keydown", changeDirection);
+        document.addEventListener("keydown", restartGame);
+
+        function changeDirection(event) {
+            const key = event.key;
+            if (key === "ArrowUp" && direction !== "DOWN") direction = "UP";
+            else if (key === "ArrowDown" && direction !== "UP") direction = "DOWN";
+            else if (key === "ArrowLeft" && direction !== "RIGHT") direction = "LEFT";
+            else if (key === "ArrowRight" && direction !== "LEFT") direction = "RIGHT";
+        }
+
+        function restartGame(event) {
+            if (event.key === "Enter" && gameOver) {
+                snake = [{ x: 5, y: 5 }];
+                direction = "RIGHT";
+                food = spawnFood();
+                gameOver = false;
+            }
+        }
+
+        function spawnFood() {
+            return {
+                x: Math.floor(Math.random() * columns),
+                y: Math.floor(Math.random() * rows),
+            };
+        }
+
+        function drawSnake() {
+            snake.forEach(segment => {
+                ctx.fillStyle = "#00ff00";
+                ctx.fillRect(segment.x * boxSize, segment.y * boxSize, boxSize, boxSize);
+            });
+        }
+
+        function drawFood() {
+            ctx.fillStyle = "#ff0000";
+            ctx.fillRect(food.x * boxSize, food.y * boxSize, boxSize, boxSize);
+        }
+
+        function moveSnake() {
+            const head = { ...snake[0] };
+
+            if (direction === "UP") head.y -= 1;
+            if (direction === "DOWN") head.y += 1;
+            if (direction === "LEFT") head.x -= 1;
+            if (direction === "RIGHT") head.x += 1;
+
+            snake.unshift(head);
+
+            if (head.x === food.x && head.y === food.y) {
+                food = spawnFood();
+            } else {
+                snake.pop();
+            }
+        }
+
+        function checkCollision() {
+            const head = snake[0];
+            if (
+                head.x < 0 || head.x >= columns ||
+                head.y < 0 || head.y >= rows ||
+                snake.slice(1).some(segment => segment.x === head.x && segment.y === head.y)
+            ) {
+                gameOver = true;
+            }
+        }
+
+        function gameLoop() {
+            if (gameOver) {
+                ctx.fillStyle = "white";
+                ctx.font = "20px Arial";
+                ctx.fillText("Game Over! Press Enter to Restart", 50, canvas.height / 2);
+                return;
+            }
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            drawFood();
+            drawSnake();
+            moveSnake();
+            checkCollision();
+        }
+
+        setInterval(gameLoop, 150);
+    </script>
+</body>
+</html>
